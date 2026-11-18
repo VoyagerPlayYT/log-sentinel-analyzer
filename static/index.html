@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LOG SENTINEL // REAL-TIME TELEMETRY STREAM & SPIKE ANALYZER</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <!-- Header Bar -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-badge">LOKI-PULSE</div>
+      <span class="brand-title">LOG SENTINEL ANALYZER</span>
+      <span class="brand-sub font-mono">WEBSOCKET LOG STREAMING // TELEMETRY SPIKES</span>
+    </div>
+    <div class="metrics-bar">
+      <div class="metric-item">
+        <span class="label">STREAM</span>
+        <span class="value font-mono text-lime" id="streamStatus">CONNECTING...</span>
+      </div>
+      <div class="metric-item">
+        <span class="label">INGESTED</span>
+        <span class="value font-mono" id="totalLogsCounter">0</span>
+      </div>
+      <div class="metric-item">
+        <span class="label">PORT</span>
+        <span class="value font-mono">8017</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Viewport -->
+  <main class="workspace">
+    <!-- Top Chart Area: Spikes Histogram -->
+    <section class="chart-section">
+      <div class="chart-header">
+        <span class="chart-title">REAL-TIME INGESTION HISTOGRAM (ERRORS // WARNINGS // INFO)</span>
+        <div class="chart-legend">
+          <span class="legend-dot dot-error"></span><span class="font-mono text-xs">ERROR</span>
+          <span class="legend-dot dot-warn"></span><span class="font-mono text-xs">WARN</span>
+          <span class="legend-dot dot-info"></span><span class="font-mono text-xs">INFO</span>
+        </div>
+      </div>
+      <div class="canvas-container">
+        <canvas id="histogramCanvas" width="960" height="70"></canvas>
+      </div>
+    </section>
+
+    <!-- Controls & Filter Toolbar -->
+    <section class="toolbar-section">
+      <div class="search-wrap">
+        <input type="text" id="logSearchInput" placeholder="Filter logs (e.g. timeout, connection, 502, IP)..." class="cyber-input font-mono">
+      </div>
+      <div class="filter-group font-mono">
+        <button class="filter-btn active" data-level="ALL">ALL</button>
+        <button class="filter-btn text-red" data-level="ERROR">ERROR</button>
+        <button class="filter-btn text-amber" data-level="WARN">WARN</button>
+        <button class="filter-btn text-lime" data-level="INFO">INFO</button>
+      </div>
+      <select id="sourceFilter" class="cyber-select font-mono">
+        <option value="ALL">All Sources</option>
+        <option value="nginx-edge">nginx-edge</option>
+        <option value="auth-sentinel">auth-sentinel</option>
+        <option value="postgres-pool">postgres-pool</option>
+        <option value="api-gateway">api-gateway</option>
+        <option value="worker-celery">worker-celery</option>
+      </select>
+      <div class="tool-actions">
+        <button class="btn btn-sm" id="btnToggleScroll">SCROLL: ON</button>
+        <button class="btn btn-sm" id="btnClearTerminal">CLEAR</button>
+        <button class="btn btn-lime btn-sm" id="btnAlertRulesModal">ALERT RULES</button>
+      </div>
+    </section>
+
+    <!-- Live Console Grid -->
+    <section class="console-section" id="consoleContainer">
+      <div class="log-stream font-mono" id="logStream">
+        <!-- Live streamed lines appended via WebSocket -->
+      </div>
+    </section>
+
+    <!-- Active Alert Banner (Hidden when no active alerts) -->
+    <div class="alert-banner hidden" id="alertBanner">
+      <div class="alert-content">
+        <span class="alert-badge">BREACH ALERT</span>
+        <span class="alert-text font-mono" id="alertBannerText">Rule 'High Error Rate Trigger' threshold breached!</span>
+      </div>
+      <button class="mini-btn text-muted" id="btnDismissAlert">DISMISS</button>
+    </div>
+  </main>
+
+  <!-- Modal: Alert Rule Config -->
+  <div class="overlay hidden" id="rulesModal">
+    <div class="modal-card">
+      <div class="modal-badge">SENTINEL DAEMON</div>
+      <h2 class="modal-title">CONFIGURE SPIKE ALERT RULES</h2>
+      <div class="modal-form">
+        <div class="input-row">
+          <label>Rule Name:</label>
+          <input type="text" id="ruleNameInput" value="Postgres Latency Alert" class="cyber-input font-mono">
+        </div>
+        <div class="input-row">
+          <label>Target Level:</label>
+          <select id="ruleLevelSelect" class="cyber-select font-mono">
+            <option value="ERROR" selected>ERROR</option>
+            <option value="WARN">WARN</option>
+          </select>
+        </div>
+        <div class="input-row">
+          <label>Event Threshold Count:</label>
+          <input type="number" id="ruleThresholdInput" value="4" min="1" class="cyber-input font-mono">
+        </div>
+        <div class="input-row">
+          <label>Time Window (Seconds):</label>
+          <input type="number" id="ruleWindowInput" value="30" min="5" class="cyber-input font-mono">
+        </div>
+        <button class="btn btn-lime mt-12" id="btnSaveRule">CREATE SPIKE WATCHDOG RULE</button>
+      </div>
+
+      <div class="saved-rules-section">
+        <div class="section-title">ACTIVE ALERT HISTORY (SQLITE)</div>
+        <div class="alert-history-scroll" id="alertHistoryList"></div>
+      </div>
+      <button class="btn mt-12" id="btnCloseModal">CLOSE [ESC]</button>
+    </div>
+  </div>
+
+  <script src="/static/sentinel.js"></script>
+</body>
+</html>
